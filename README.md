@@ -1,0 +1,2 @@
+# NamuNavigator
+namu.wiki navigator
