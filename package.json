@@ -1,0 +1,28 @@
+{
+  "name": "namu_navigator",
+  "version": "1.0.0",
+  "description": "NamuWiki Navigator",
+  "main": "app.js",
+  "dependencies": {
+    "JSONStream": "^1.1.1",
+    "event-stream": "^3.3.2",
+    "mysql": "^2.10.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node --max_old_space_size=8096 app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skyser2003/NamuNavigator.git"
+  },
+  "keywords": [
+    "NamuWiki"
+  ],
+  "author": "Seung Ho Jang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/skyser2003/NamuNavigator/issues"
+  },
+  "homepage": "https://github.com/skyser2003/NamuNavigator#readme"
+}
