@@ -16,7 +16,7 @@ connection.connect(function(err){
 	if(err) throw err;
 });
 
-var stream = fs.createReadStream('data/namuwiki.json', {encoding: 'utf8'});
+var stream = fs.createReadStream('../data/namuwiki.json', {encoding: 'utf8'});
 var parser = JSONStream.parse('*');
 
 var i = 0;
