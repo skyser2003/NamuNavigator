@@ -4,27 +4,59 @@ var es = require('event-stream');
 var mysql = require('mysql');
 var util = require('util');
 
-var connection = mysql.createConnection({
-	host : "localhost",
+var filename = '../db/namuwiki.json';
+
+if(fs.existsSync(filename) == false) {
+	console.error(filename + ' doesn\'t exist.');
+	return;
+}
+
+var pool = mysql.createPool({
+	connectionLimit : 100,
+	host : 'localhost',
 	port : 3306,
 	user : 'root',
 	password : 'dnaxxwmf',
 	database : 'namuwiki'
 });
 
-connection.connect(function(err){
-	if(err) throw err;
-});
-
-var stream = fs.createReadStream('../data/namuwiki.json', {encoding: 'utf8'});
+var stream = fs.createReadStream(filename, {encoding: 'utf8'});
 var parser = JSONStream.parse('*');
 
-var i = 0;
+var flag = 0;
+var rowCount = 0;
+var dataErrorCount = 0;
+var sqlErrorCount = 0;
+var finishedCount = 0;
 
-stream.pipe(parser).pipe(es.mapSync(function(data){
-	connection.query('INSERT INTO `page` (`title`, `text`, `namespace`) VALUES(?, ?, ?)', [data.title, data.text, data.namespace]);
-	++i;
+console.log('Parsing JSON file and inserting into database.');
+
+stream.pipe(parser).pipe(es.mapSync(function(data) {
+	if(data.title === undefined || data.text === undefined || data.namespace === undefined) {
+		++dataErrorCount;
+	}
+	else {
+		pool.query('INSERT INTO `page` (`title`, `text`, `namespace`) VALUES(?, ?, ?)', [data.title, data.text, data.namespace], function(err, data) {
+			++finishedCount;
+
+			if(flag == 1 && finishedCount == (sqlErrorCount + rowCount)) {
+				flag = 0;
+				pool.end(function(err) {
+					console.log('Total page : ' + rowCount);
+					console.log('Data error : ' + dataErrorCount);
+					console.log('SQL error : ' + sqlErrorCount);
+				});
+			}			
+
+			if(err) {
+				console.log(err);
+				++sqlErrorCount;
+				return;
+			}
+
+			++rowCount;
+		});
+	}
 }).on('end', function() {
-	console.log("Total pages : " + i);
-	connection.end();
+	flag = 1;
 }));
