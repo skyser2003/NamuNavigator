@@ -9,9 +9,6 @@
     "mysql": "^2.10.2"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "node --max_old_space_size=8096 generate_db"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/skyser2003/NamuNavigator.git"

@@ -23,40 +23,57 @@ var pool = mysql.createPool({
 var stream = fs.createReadStream(filename, {encoding: 'utf8'});
 var parser = JSONStream.parse('*');
 
-var flag = 0;
+var ended = false;
+
 var rowCount = 0;
 var dataErrorCount = 0;
 var sqlErrorCount = 0;
-var finishedCount = 0;
+var totalCount = 0;
+
+var test = false;
+var testCount = 100;
 
 console.log('Parsing JSON file and inserting into database.');
 
-stream.pipe(parser).pipe(es.mapSync(function(data) {
+var dbSave = es.mapSync(function(data) {
+	if(test == true) {
+		if(testCount <= 0) {
+			parser.emit('end');
+			return;
+		}
+
+		--testCount;
+	}
+
+	++totalCount;
+
 	if(data.title === undefined || data.text === undefined || data.namespace === undefined) {
 		++dataErrorCount;
 	}
 	else {
 		pool.query('INSERT INTO `page` (`title`, `text`, `namespace`) VALUES(?, ?, ?)', [data.title, data.text, data.namespace], function(err, data) {
-			++finishedCount;
+			if(err) {
+				console.log(err);
+				++sqlErrorCount;
+			}
+			else {
+				++rowCount;
+			};
 
-			if(flag == 1 && finishedCount == (sqlErrorCount + rowCount)) {
-				flag = 0;
+			if(ended == true && totalCount == (sqlErrorCount + rowCount)) {
 				pool.end(function(err) {
 					console.log('Total page : ' + rowCount);
 					console.log('Data error : ' + dataErrorCount);
 					console.log('SQL error : ' + sqlErrorCount);
 				});
-			}			
-
-			if(err) {
-				console.log(err);
-				++sqlErrorCount;
-				return;
 			}
-
-			++rowCount;
 		});
 	}
 }).on('end', function() {
-	flag = 1;
-}));
+	ended = true;
+	console.log('end');
+
+	stream.emit('end');
+});
+
+stream.pipe(parser).pipe(dbSave);
