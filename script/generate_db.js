@@ -5,19 +5,28 @@ var mysql = require('mysql');
 var util = require('util');
 
 var filename = '../db/namuwiki.json';
+var dbInfoFilename = '../db/dbinfo.json';
 
 if(fs.existsSync(filename) == false) {
 	console.error(filename + ' doesn\'t exist.');
 	return;
 }
 
+if(fs.existsSync(dbInfoFilename) == false) {
+	console.error(dbInfoFilename + ' doesn\'t exist.');
+	return;
+}
+
+var dbInfoFile = fs.readFileSync(dbInfoFilename);
+var dbInfo = JSON.parse(dbInfoFile);
+
 var pool = mysql.createPool({
 	connectionLimit : 100,
-	host : 'localhost',
-	port : 3306,
-	user : 'root',
-	password : 'dnaxxwmf',
-	database : 'namuwiki'
+	host : dbInfo.host,
+	port : dbInfo.port,
+	user : dbInfo.id,
+	password : dbInfo.pw,
+	database : dbInfo.db
 });
 
 var stream = fs.createReadStream(filename, {encoding: 'utf8'});
